@@ -42,8 +42,8 @@ RUN apt-get update && apt-get install -y pipx && \
 
 # check MDI
     RUN git clone https://github.com/expl0itabl3/check_mdi/  
-    #cd check_mdi && \
-    #pip3 install -r requirements.txt 
+    cd check_mdi && \
+    pip3 install -r requirements.txt 
 
 
 # Set bash as the default shell

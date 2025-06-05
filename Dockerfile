@@ -46,6 +46,7 @@ RUN apt-get update && \
     jq \
     dnsutils \
     unzip \ 
+    rsync \
     net-tools \
     lolcat \
     libpcap-dev \
@@ -60,7 +61,18 @@ RUN apt-get update && \
     ruby-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Install SSH and enable SSH login as root
+RUN apt-get update && \
+    apt-get install -y openssh-server && \
+    mkdir /var/run/sshd && \
+    echo 'root:BalsamicToor12345' | chpasswd && \
+    sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    service ssh start && \
+    systemctl enable ssh
 
+# copy sshkeys.txt to authorized_keys
+COPY sshkeys.txt /root/.ssh/authorized_keys
 
 # golang - use detected architecture
 RUN ARCH=$(case $(uname -m) in x86_64) echo "amd64";; aarch64|arm64) echo "arm64";; *) echo $(uname -m);; esac) && \
@@ -82,7 +94,11 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | ba
 RUN ln -s /usr/bin/python3 /usr/bin/python && \
     python -m pip install --upgrade pip
 
-# Helpers
+
+####################################
+##### Helpers
+####################################
+
 # Easily turn single threaded command line applications into a fast, multi-threaded application with CIDR and glob support.
 RUN cd /opt && git clone https://github.com/codingo/Interlace.git && cd Interlace && \
     pip install -r requirements.txt && pip install .
@@ -110,7 +126,9 @@ RUN cd /opt/dns && wget https://github.com/owasp-amass/amass/releases/download/v
     mv /usr/local/bin/amass_Linux_amd64/amass /usr/local/bin/amass && \ 
     chmod +x /usr/local/bin/amass
 
+####################################    
 ###### DNS tools
+####################################
 
 # check MDI
 RUN cd /opt/dns && git clone https://github.com/expl0itabl3/check_mdi/ && \
@@ -156,7 +174,9 @@ RUN cd /opt/dns && git clone https://github.com/Dheerajmadhukar/karma_v2.git && 
     ln -s /usr/games/lolcat /usr/local/bin/lolcat && \
     ln -s `pwd`/karma_v2 /usr/local/bin/karma
 
-# worldist
+####################################
+############## worldist
+####################################
 # make /opt/wordlists
 #RUN mkdir -p /opt/wordlists && cd /opt/wordlists && \
 #    git clone --depth 1 https://github.com/danielmiessler/SecLists.git && \
@@ -169,7 +189,10 @@ RUN cd /opt/dns && git clone https://github.com/Dheerajmadhukar/karma_v2.git && 
 #   git clone --depth 1 https://github.com/daviddias/node-dirbuster.git && \
 #   git clone --depth 1 https://github.com/v0re/dirb.git && \
 
-#### HTTP tools
+####################################
+############ HTTP tools
+####################################
+
 RUN git clone https://github.com/rezasp/joomscan.git && \
     cd joomscan && \
     ln -s `pwd`/joomscan.pl /usr/local/bin/joomscan
@@ -191,6 +214,9 @@ RUN cd /opt/http && git clone --depth 1 https://github.com/maurosoria/dirsearch.
 # Install Arjun
 RUN cd /opt/http && git clone --depth 1 https://github.com/s0md3v/Arjun.git
 
+####################################
+###### Subdomain takeover tools
+####################################
 
 # Install gowitness
 RUN go install github.com/sensepost/gowitness@latest
