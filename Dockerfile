@@ -74,6 +74,7 @@ RUN apt-get update && \
 # copy sshkeys.txt to authorized_keys
 COPY sshkeys.txt /root/.ssh/authorized_keys
 
+
 # golang - use detected architecture
 RUN ARCH=$(case $(uname -m) in x86_64) echo "amd64";; aarch64|arm64) echo "arm64";; *) echo $(uname -m);; esac) && \
     wget https://dl.google.com/go/$(curl "https://go.dev/VERSION?m=text" | head -n 1).linux-${ARCH}.tar.gz && \
